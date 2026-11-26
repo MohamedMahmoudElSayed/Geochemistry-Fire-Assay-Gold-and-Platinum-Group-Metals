@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Fire Assay (Pb-FA) & Nickel Sulfide Fire Assay (NiS-FA) — 118-Element Periodic Table</title>
+  <style>
+    :root {
+      --bg-canvas: #F3F2EF;
+      --card-bg: #FFFFFF;
+      --border-subtle: #DCE1E7;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --linkedin-blue: #0A66C2;
+      --linkedin-blue-hover: #004182;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg-canvas); color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      min-height: 100dvh; overflow-x: hidden;
+    }
+    .app-shell {
+      max-width: 1480px; margin: 0 auto;
+      padding: 14px max(12px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    }
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+      background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    }
+    .toolbar-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--linkedin-blue); display: block; }
+    .toolbar-hint { font-size: 12.5px; color: var(--text-secondary); }
+    .toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn {
+      appearance: none; border: 1px solid var(--border-subtle); background: #FFFFFF; color: var(--text-primary);
+      font-size: 13px; font-weight: 600; padding: 9px 14px; border-radius: 999px; cursor: pointer; touch-action: manipulation;
+    }
+    .btn-primary { background: var(--linkedin-blue); border-color: var(--linkedin-blue); color: #FFFFFF; }
+    .btn-primary:hover { background: var(--linkedin-blue-hover); }
+    .poster-card {
+      background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(15,23,42,0.06); overflow: hidden;
+    }
+    .poster-header {
+      padding: 20px 24px 14px; border-bottom: 1px solid #E2E8F0;
+      display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px;
+    }
+    .poster-header h1 { margin: 0; font-size: clamp(19px, 2.3vw, 27px); font-weight: 800; letter-spacing: -0.02em; color: #0F172A; }
+    .poster-header p { margin: 4px 0 0; font-size: clamp(12.5px, 1.3vw, 15px); color: var(--text-secondary); font-weight: 500; }
+    .legend-grid { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: #1E293B; }
+    .swatch { width: 17px; height: 17px; border-radius: 4px; flex-shrink: 0; }
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    }
+    .pill-btn {
+      appearance: none; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155;
+      font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; touch-action: manipulation;
+    }
+    .pill-btn.is-active { background: #0F172A; border-color: #0F172A; color: #FFFFFF; }
+    .mobile-scroll-bar {
+      display: none; align-items: center; justify-content: space-between; padding: 7px 14px;
+      background: #EFF6FF; border-bottom: 1px solid #DBEAFE; font-size: 12px; color: #1E40AF; font-weight: 600;
+    }
+    .table-scroll-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px 8px; background: #FFFFFF; }
+    svg#ptable-svg { display: block; width: 100%; min-width: 980px; height: auto; user-select: none; }
+    .el-tile { cursor: pointer; touch-action: manipulation; transition: opacity 0.15s ease; }
+    .el-tile.is-dimmed { opacity: 0.2; }
+    .el-tile:hover rect.tile-bg, .el-tile.is-active rect.tile-bg { stroke: #0F172A; stroke-width: 2.5; }
+    .inspector-bar {
+      margin: 4px 18px 16px; padding: 14px 16px; border-radius: 10px; background: #F8FAFC; border: 1px solid #CBD5E1;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .inspector-main { display: flex; align-items: flex-start; gap: 12px; flex: 1 1 360px; }
+    .inspector-badge {
+      min-width: 54px; height: 54px; border-radius: 10px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; font-weight: 800; color: #FFFFFF; flex-shrink: 0;
+    }
+    .inspector-badge .z-num { font-size: 10px; font-weight: 700; opacity: 0.92; }
+    .inspector-badge .sym { font-size: 20px; line-height: 1.1; }
+    .inspector-details h3 { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #0F172A; }
+    .inspector-details p { margin: 0; font-size: 13px; line-height: 1.48; color: #334155; }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .quick-chips-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748B; margin-right: 4px; }
+    .chip-btn {
+      appearance: none; border: 1px solid #CBD5E1; font-size: 12px; font-weight: 700; padding: 5px 10px;
+      border-radius: 7px; cursor: pointer; touch-action: manipulation;
+    }
+    .poster-footer { background: #0F172A; border-top: 1px solid #CBD5E1; padding: 20px 24px 24px; }
+    .footer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .f-card {
+      background: #1E293B; border: 1px solid #334155; border-radius: 10px;
+      padding: 14px 16px; color: #F1F5F9;
+    }
+    .f-card h2 { margin: 0 0 10px; font-size: 14.5px; font-weight: 800; color: #FBBF24; }
+    .f-card ul { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.48; }
+    .f-card li { margin-bottom: 5px; }
+    @media (max-width: 900px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .app-shell { padding: 10px 8px 20px; }
+      .toolbar-actions { width: 100%; }
+      .toolbar-actions .btn { flex: 1 1 auto; text-align: center; }
+      .mobile-scroll-bar { display: flex; }
+      .inspector-bar { margin: 4px 10px 12px; padding: 12px; }
+      .poster-footer { padding: 16px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="toolbar">
+      <div>
+        <span class="toolbar-badge">Precious Metals & PGE Geochemistry</span>
+        <span class="toolbar-hint">Tap any element tile or filter pill to inspect decomposition chemistry &amp; instrumental finishes</span>
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" class="btn btn-primary" id="btn-export-png">Download 4K PNG</button>
+        <button type="button" class="btn" id="btn-export-svg">Download Vector SVG</button>
+      </div>
+    </div>
+
+    <main class="poster-card">
+      <header class="poster-header">
+        <div>
+          <h1>PERIODIC TABLE — FIRE ASSAY (Pb-FA) & NICKEL SULFIDE FIRE ASSAY (NiS-FA)</h1>
+          <p>Precious-Metal Preconcentration, Collector Chemistry & Instrumental Finishes (118-Element Reference)</p>
+        </div>
+        <div class="legend-grid"><div class="legend-item"><span class="swatch" style="background:#D97706;border:1px solid #B45309;"></span><span>Pb-FA (Au, Ag)</span></div>
+<div class="legend-item"><span class="swatch" style="background:linear-gradient(135deg,#D97706 50%,#0D9488 50%);border:1px solid #0F766E;"></span><span>Pb-FA & NiS-FA (Rh, Pd, Pt)</span></div>
+<div class="legend-item"><span class="swatch" style="background:#0D9488;border:1px solid #0F766E;"></span><span>NiS-FA (Ru, Os, Ir)</span></div>
+<div class="legend-item"><span class="swatch" style="background:#F1F5F9;border:1px solid #CBD5E1;"></span><span>Other Elements (Non-Fire Assay)</span></div></div>
+      </header>
+
+      <div class="filter-bar" id="filter-bar"><button type="button" class="pill-btn is-active" data-filter="all">All 118 Elements</button>
+<button type="button" class="pill-btn" data-filter="pb">Pb-FA Only (Au, Ag)</button>
+<button type="button" class="pill-btn" data-filter="both">Pb-FA & NiS-FA (Rh, Pd, Pt)</button>
+<button type="button" class="pill-btn" data-filter="nis">NiS-FA Only (Ru, Os, Ir)</button></div>
+
+      <div class="mobile-scroll-bar">
+        <span>&larr; Swipe horizontally to view all 18 IUPAC groups &rarr;</span>
+        <span>Tap tile for specs</span>
+      </div>
+
+      <div class="table-scroll-wrapper" id="table-scroll-wrapper">
+        <svg id="ptable-svg" viewBox="0 0 1330 740" xmlns="http://www.w3.org/2000/svg"
+             font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
+             role="img" aria-label="PERIODIC TABLE — FIRE ASSAY (Pb-FA) & NICKEL SULFIDE FIRE ASSAY (NiS-FA)">
+          <defs><linearGradient id="split-pb-nis" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="49.5%" stop-color="#D97706"/><stop offset="50.5%" stop-color="#0D9488"/></linearGradient></defs>
+          <g id="grid-headers"></g>
+          <g id="elements-layer"></g>
+        </svg>
+      </div>
+
+      <section class="inspector-bar" aria-live="polite">
+        <div class="inspector-main">
+          <div class="inspector-badge" id="insp-badge" style="background:#D97706;">
+            <span class="z-num" id="insp-z">79</span>
+            <span class="sym" id="insp-sym">Au</span>
+          </div>
+          <div class="inspector-details">
+            <h3 id="insp-title">Gold (Au) — Lead-Collection Fire Assay (Pb-FA)</h3>
+            <p id="insp-desc">Standard 30–50 g litharge (PbO) fusion at 1000–1100 °C followed by cupellation at ~950 °C to a doré prill. Finishes: Gravimetric microbalance (high-grade/bullion), FAAS, ICP-OES, or ICP-MS.</p>
+          </div>
+        </div>
+        <div class="quick-chips">
+          <span class="quick-chips-label">Benchmark Elements:</span>
+          <button type="button" class="chip-btn" style="background:#FFFBEB;border-color:#F59E0B;color:#92400E;" data-z="79">79 Au</button>
+<button type="button" class="chip-btn" style="background:#FFFBEB;border-color:#F59E0B;color:#92400E;" data-z="47">47 Ag</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#0D9488;color:#0F172A;" data-z="78">78 Pt</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#0D9488;color:#0F172A;" data-z="46">46 Pd</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#0D9488;color:#0F172A;" data-z="45">45 Rh</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#14B8A6;color:#115E59;" data-z="44">44 Ru</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#14B8A6;color:#115E59;" data-z="76">76 Os</button>
+<button type="button" class="chip-btn" style="background:#F0FDFA;border-color:#14B8A6;color:#115E59;" data-z="77">77 Ir</button>
+        </div>
+      </section>
+
+      <footer class="poster-footer">
+        <div class="footer-grid">
+        <article class="f-card" style="border-top:4px solid #F59E0B;">
+          <h2>1. Lead-Collection Fire Assay (Pb-FA)</h2>
+          <ul><li><strong>Elements:</strong> Au, Ag + Pt, Pd, Rh (with Au/Ag collector prill)</li>
+<li><strong>Collector & Flux:</strong> Litharge (PbO), Na2CO3, borax, silica, flour/KNO3 (30–50 g aliquot)</li>
+<li><strong>Thermal Cycle:</strong> Fusion 1000–1100 °C to Pb button; cupellation ~950 °C</li>
+<li><strong>Finish & LLDs:</strong> ICP-MS (1–2 ppb), FAAS (5–10 ppb), ICP-OES, Gravimetric (~0.05 g/t)</li></ul>
+        </article>
+        <article class="f-card" style="border-top:4px solid #14B8A6;">
+          <h2>2. Nickel Sulfide Fire Assay (NiS-FA)</h2>
+          <ul><li><strong>Elements:</strong> Full 6-PGE Suite: Ru, Rh, Pd, Os, Ir, Pt</li>
+<li><strong>Collector & Flux:</strong> Ni powder + elemental S (NiS matte button) with borax/soda flux</li>
+<li><strong>Dissolution:</strong> Fusion 1000–1150 °C; conc. HCl dissolution + Tellurium (Te) co-precipitation</li>
+<li><strong>Finish & LLDs:</strong> ICP-MS (0.5–2 ppb; Os 2–5 ppb sealed digest), ICP-OES, INAA</li></ul>
+        </article>
+        <article class="f-card" style="border-top:4px solid #60A5FA;">
+          <h2>3. Precious Metal Units & Metric Conversions</h2>
+          <ul><li><strong>Metric Equivalents:</strong> 1 ppm = 1 mg/kg = 1 g/t  |  1 ppb = 0.001 ppm</li>
+<li><strong>Weight Percent:</strong> 10,000 ppm = 1 wt.%  |  1 wt.% = 10,000 g/t</li>
+<li><strong>Troy Mass:</strong> 1 troy ounce = 31.1034768 g</li>
+<li><strong>Tonnage Grades:</strong> 1 oz troy/t = 31.10348 g/t  |  1 oz troy/short ton = 34.2857 g/t</li></ul>
+        </article></div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const ELEMENTS = [
+      [1,"H","Hydrogen",1,1],[2,"He","Helium",18,1],
+      [3,"Li","Lithium",1,2],[4,"Be","Beryllium",2,2],[5,"B","Boron",13,2],[6,"C","Carbon",14,2],[7,"N","Nitrogen",15,2],[8,"O","Oxygen",16,2],[9,"F","Fluorine",17,2],[10,"Ne","Neon",18,2],
+      [11,"Na","Sodium",1,3],[12,"Mg","Magnesium",2,3],[13,"Al","Aluminium",13,3],[14,"Si","Silicon",14,3],[15,"P","Phosphorus",15,3],[16,"S","Sulfur",16,3],[17,"Cl","Chlorine",17,3],[18,"Ar","Argon",18,3],
+      [19,"K","Potassium",1,4],[20,"Ca","Calcium",2,4],[21,"Sc","Scandium",3,4],[22,"Ti","Titanium",4,4],[23,"V","Vanadium",5,4],[24,"Cr","Chromium",6,4],[25,"Mn","Manganese",7,4],[26,"Fe","Iron",8,4],[27,"Co","Cobalt",9,4],[28,"Ni","Nickel",10,4],[29,"Cu","Copper",11,4],[30,"Zn","Zinc",12,4],[31,"Ga","Gallium",13,4],[32,"Ge","Germanium",14,4],[33,"As","Arsenic",15,4],[34,"Se","Selenium",16,4],[35,"Br","Bromine",17,4],[36,"Kr","Krypton",18,4],
+      [37,"Rb","Rubidium",1,5],[38,"Sr","Strontium",2,5],[39,"Y","Yttrium",3,5],[40,"Zr","Zirconium",4,5],[41,"Nb","Niobium",5,5],[42,"Mo","Molybdenum",6,5],[43,"Tc","Technetium",7,5],[44,"Ru","Ruthenium",8,5],[45,"Rh","Rhodium",9,5],[46,"Pd","Palladium",10,5],[47,"Ag","Silver",11,5],[48,"Cd","Cadmium",12,5],[49,"In","Indium",13,5],[50,"Sn","Tin",14,5],[51,"Sb","Antimony",15,5],[52,"Te","Tellurium",16,5],[53,"I","Iodine",17,5],[54,"Xe","Xenon",18,5],
+      [55,"Cs","Caesium",1,6],[56,"Ba","Barium",2,6],
+      [57,"La","Lanthanum",4,8.35],[58,"Ce","Cerium",5,8.35],[59,"Pr","Praseodymium",6,8.35],[60,"Nd","Neodymium",7,8.35],[61,"Pm","Promethium",8,8.35],[62,"Sm","Samarium",9,8.35],[63,"Eu","Europium",10,8.35],[64,"Gd","Gadolinium",11,8.35],[65,"Tb","Terbium",12,8.35],[66,"Dy","Dysprosium",13,8.35],[67,"Ho","Holmium",14,8.35],[68,"Er","Erbium",15,8.35],[69,"Tm","Thulium",16,8.35],[70,"Yb","Ytterbium",17,8.35],[71,"Lu","Lutetium",18,8.35],
+      [72,"Hf","Hafnium",4,6],[73,"Ta","Tantalum",5,6],[74,"W","Tungsten",6,6],[75,"Re","Rhenium",7,6],[76,"Os","Osmium",8,6],[77,"Ir","Iridium",9,6],[78,"Pt","Platinum",10,6],[79,"Au","Gold",11,6],[80,"Hg","Mercury",12,6],[81,"Tl","Thallium",13,6],[82,"Pb","Lead",14,6],[83,"Bi","Bismuth",15,6],[84,"Po","Polonium",16,6],[85,"At","Astatine",17,6],[86,"Rn","Radon",18,6],
+      [87,"Fr","Francium",1,7],[88,"Ra","Radium",2,7],
+      [89,"Ac","Actinium",4,9.35],[90,"Th","Thorium",5,9.35],[91,"Pa","Protactinium",6,9.35],[92,"U","Uranium",7,9.35],[93,"Np","Neptunium",8,9.35],[94,"Pu","Plutonium",9,9.35],[95,"Am","Americium",10,9.35],[96,"Cm","Curium",11,9.35],[97,"Bk","Berkelium",12,9.35],[98,"Cf","Californium",13,9.35],[99,"Es","Einsteinium",14,9.35],[100,"Fm","Fermium",15,9.35],[101,"Md","Mendelevium",16,9.35],[102,"No","Nobelium",17,9.35],[103,"Lr","Lawrencium",18,9.35],
+      [104,"Rf","Rutherfordium",4,7],[105,"Db","Dubnium",5,7],[106,"Sg","Seaborgium",6,7],[107,"Bh","Bohrium",7,7],[108,"Hs","Hassium",8,7],[109,"Mt","Meitnerium",9,7],[110,"Ds","Darmstadtium",10,7],[111,"Rg","Roentgenium",11,7],[112,"Cn","Copernicium",12,7],[113,"Nh","Nihonium",13,7],[114,"Fl","Flerovium",14,7],[115,"Mc","Moscovium",15,7],[116,"Lv","Livermorium",16,7],[117,"Ts","Tennessine",17,7],[118,"Og","Oganesson",18,7]
+    ];
+
+    const CAT_STYLES = {
+      pb: { fill: "#D97706", stroke: "#B45309", text: "#FFFFFF", sub: "#FEF3C7", tagColor: "#FFFFFF", badge: "#D97706" },
+      both: { fill: "url(#split-pb-nis)", stroke: "#0F766E", text: "#FFFFFF", sub: "#F8FAFC", tagColor: "#FFFFFF", badge: "#0D9488" },
+      nis: { fill: "#0D9488", stroke: "#0F766E", text: "#FFFFFF", sub: "#CCFBF1", tagColor: "#FFFFFF", badge: "#0D9488" },
+      other: { fill: "#F1F5F9", stroke: "#CBD5E1", text: "#334155", sub: "#64748B", tagColor: "#64748B", badge: "#64748B" }
+    };
+    const ELEMENT_MAP = {
+      79: { cat: "pb", tag: "Pb-FA", title: "Gold (Au) — Lead-Collection Fire Assay (Pb-FA)", desc: "30–50 g litharge (PbO) fusion at 1000–1100 °C + cupellation at ~950 °C. Finishes: Gravimetric microbalance (~0.05 g/t), FAAS (5–10 ppb), ICP-OES, or ICP-MS (1–2 ppb)." },
+      47: { cat: "pb", tag: "Pb-FA", title: "Silver (Ag) — Lead-Collection Fire Assay (Pb-FA)", desc: "Collected in molten Pb at 1000–1100 °C and cupelled at ~950 °C (using Au/Pd inquartation). Finishes: Gravimetric microbalance, FAAS, or ICP-OES." },
+      78: { cat: "both", tag: "Pb/NiS", title: "Platinum (Pt) — Both Pb-FA & NiS-FA", desc: "Determined via Pb-FA (Au/Ag prill + aqua regia digest for ICP-OES/ICP-MS) or NiS-FA (Ni+S fusion at 1000–1150 °C, HCl dissolution, Te co-precipitation, ICP-MS)." },
+      46: { cat: "both", tag: "Pb/NiS", title: "Palladium (Pd) — Both Pb-FA & NiS-FA", desc: "Routinely determined alongside Au and Pt via Pb-FA (ICP-OES/ICP-MS) or across the full 6-PGE suite via NiS-FA with Tellurium (Te) co-precipitation." },
+      45: { cat: "both", tag: "Pb/NiS", title: "Rhodium (Rh) — Both Pb-FA & NiS-FA", desc: "Collected via Pb-FA (requires Au inquartation to prevent incomplete cupellation recovery) or quantitatively via NiS-FA + HCl dissolution + Te co-precipitation + ICP-MS." },
+      44: { cat: "nis", tag: "NiS-FA", title: "Ruthenium (Ru) — Nickel Sulfide Fire Assay (NiS-FA)", desc: "Volatilizes as RuO4 during Pb-FA cupellation; requires NiS-FA (1000–1150 °C), HCl dissolution of NiS button, Te co-precipitation, and ICP-MS or INAA finish." },
+      76: { cat: "nis", tag: "NiS-FA", title: "Osmium (Os) — Nickel Sulfide Fire Assay (NiS-FA)", desc: "Lost as volatile OsO4 during Pb-FA cupellation; requires NiS-FA (1000–1150 °C), HCl dissolution, Te co-precipitation, and sealed/cold aqua regia digest before ICP-MS." },
+      77: { cat: "nis", tag: "NiS-FA", title: "Iridium (Ir) — Nickel Sulfide Fire Assay (NiS-FA)", desc: "Incompletely collected in standard Pb-FA; quantitatively recovered by NiS-FA fusion (1000–1150 °C), HCl dissolution, Te co-precipitation, and ICP-MS or INAA." }
+    };
+    const FOOTER_CANVAS_DATA = [
+      { title: "1. Lead-Collection Fire Assay (Pb-FA)", accent: "#F59E0B", lines: [
+        "Elements: Au, Ag + Pt, Pd, Rh (with Au/Ag collector prill)",
+        "Collector & Flux: Litharge (PbO), Na2CO3, borax, silica, flour/KNO3 (30–50 g)",
+        "Thermal Cycle: Fusion 1000–1100 °C to Pb button; cupellation ~950 °C",
+        "Finish & LLDs: ICP-MS (1–2 ppb), FAAS (5–10 ppb), ICP-OES, Gravimetric (~0.05 g/t)"
+      ]},
+      { title: "2. Nickel Sulfide Fire Assay (NiS-FA)", accent: "#14B8A6", lines: [
+        "Elements: Full 6-PGE Suite (Ru, Rh, Pd, Os, Ir, Pt)",
+        "Collector & Flux: Ni powder + elemental S (NiS matte) with borax/soda flux",
+        "Dissolution: Fusion 1000–1150 °C; conc. HCl dissolution + Te co-precipitation",
+        "Finish & LLDs: ICP-MS (0.5–2 ppb; Os 2–5 ppb sealed digest), ICP-OES, INAA"
+      ]},
+      { title: "3. Precious Metal Units & Metric Conversions", accent: "#60A5FA", lines: [
+        "Metric Equivalents: 1 ppm = 1 mg/kg = 1 g/t  |  1 ppb = 0.001 ppm",
+        "Weight Percent: 10,000 ppm = 1 wt.%  |  1 wt.% = 10,000 g/t",
+        "Troy Mass: 1 troy ounce = 31.1034768 g",
+        "Tonnage Grades: 1 oz troy/t = 31.10348 g/t  |  1 oz troy/short ton = 34.2857 g/t"
+      ]}
+    ];
+    const EXPORT_BASENAME = "01_Fire_Assay_Pb_NiS_Periodic_Table";
+    const POSTER_TITLE = "PERIODIC TABLE — FIRE ASSAY (Pb-FA) & NICKEL SULFIDE FIRE ASSAY (NiS-FA)";
+    const POSTER_SUBTITLE = "Precious-Metal Preconcentration, Collector Chemistry & Instrumental Finishes (118-Element Reference)";
+    const FOOTER_BG = "#0F172A";
+    const CARD_BG = "#1E293B";
+    const CARD_TEXT = "#F1F5F9";
+    const CARD_TITLE = "#FBBF24";
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const CELL_W = 68;
+    const CELL_H = 66;
+    const GAP = 4;
+    const START_X = 34;
+    const START_Y = 30;
+
+    function elSvg(tag, attrs) {
+      const el = document.createElementNS(SVG_NS, tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    const headersLayer = document.getElementById("grid-headers");
+    for (let g = 1; g <= 18; g++) {
+      const tx = elSvg("text", {
+        x: START_X + (g - 1) * (CELL_W + GAP) + CELL_W / 2, y: 19,
+        "text-anchor": "middle", fill: "#64748B", "font-size": "11", "font-weight": "700"
+      });
+      tx.textContent = g;
+      headersLayer.appendChild(tx);
+    }
+    const periods = [[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],["Ln",8.35],["An",9.35]];
+    periods.forEach(([lbl, r]) => {
+      const tx = elSvg("text", {
+        x: 16, y: START_Y + (r - 1) * (CELL_H + GAP) + CELL_H / 2 + 4,
+        "text-anchor": "middle", fill: "#64748B", "font-size": "11", "font-weight": "700"
+      });
+      tx.textContent = lbl;
+      headersLayer.appendChild(tx);
+    });
+
+    const placeholders = [
+      { col: 3, row: 6, label: "57–71", sub: "Lanthanides" },
+      { col: 3, row: 7, label: "89–103", sub: "Actinides" }
+    ];
+    placeholders.forEach(p => {
+      const x = START_X + (p.col - 1) * (CELL_W + GAP);
+      const y = START_Y + (p.row - 1) * (CELL_H + GAP);
+      headersLayer.appendChild(elSvg("rect", {
+        x, y, width: CELL_W, height: CELL_H, rx: 6,
+        fill: "#F8FAFC", stroke: "#CBD5E1", "stroke-width": 1.2, "stroke-dasharray": "3 2"
+      }));
+      const t1 = elSvg("text", { x: x + CELL_W/2, y: y + 29, "text-anchor": "middle", fill: "#475569", "font-size": "11", "font-weight": "700" });
+      t1.textContent = p.label;
+      const t2 = elSvg("text", { x: x + CELL_W/2, y: y + 44, "text-anchor": "middle", fill: "#64748B", "font-size": "8.5", "font-weight": "600" });
+      t2.textContent = p.sub;
+      headersLayer.appendChild(t1);
+      headersLayer.appendChild(t2);
+    });
+
+    const elementsLayer = document.getElementById("elements-layer");
+    ELEMENTS.forEach(([z, sym, name, col, row]) => {
+      const info = ELEMENT_MAP[z] || { cat: "other", tag: "Matrix", title: `${name} (${sym}) — Non-Target Matrix Element`, desc: "Analyzed via alternative geochemical decomposition & instrumental suite depending on host mineralogy." };
+      const st = CAT_STYLES[info.cat] || CAT_STYLES.other;
+      const x = START_X + (col - 1) * (CELL_W + GAP);
+      const y = START_Y + (row - 1) * (CELL_H + GAP);
+
+      const g = elSvg("g", {
+        class: "el-tile" + (z === 79 ? " is-active" : ""),
+        "data-z": z, "data-cat": info.cat, "data-col": col,
+        role: "button", tabindex: "0", "aria-label": `${z} ${name} (${sym})`
+      });
+
+      g.appendChild(elSvg("rect", {
+        class: "tile-bg", x, y, width: CELL_W, height: CELL_H, rx: 6,
+        fill: st.fill, stroke: st.stroke, "stroke-width": info.cat === "other" ? 1 : 1.6
+      }));
+
+      if (st.bar) {
+        g.appendChild(elSvg("rect", {
+          x: x + 1, y: y + 1, width: CELL_W - 2, height: 5, rx: 3, fill: st.bar
+        }));
+      }
+
+      const tz = elSvg("text", { x: x + 6, y: y + 16, fill: st.sub, "font-size": "9.5", "font-weight": "700" });
+      tz.textContent = z;
+
+      const tsym = elSvg("text", { x: x + CELL_W/2, y: y + 36, "text-anchor": "middle", fill: st.text, "font-size": "17.5", "font-weight": "800" });
+      tsym.textContent = sym;
+
+      const tname = elSvg("text", { x: x + CELL_W/2, y: y + 48, "text-anchor": "middle", fill: st.sub, "font-size": "7.8", "font-weight": "600" });
+      tname.textContent = name;
+
+      const ttag = elSvg("text", { x: x + CELL_W/2, y: y + 60, "text-anchor": "middle", fill: st.tagColor, "font-size": "7.5", "font-weight": "700" });
+      ttag.textContent = info.tag;
+
+      g.appendChild(tz); g.appendChild(tsym); g.appendChild(tname); g.appendChild(ttag);
+      g.addEventListener("click", () => selectElement(z, false));
+      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectElement(z, true); } });
+      elementsLayer.appendChild(g);
+    });
+
+    function selectElement(z, centerScroll) {
+      const found = ELEMENTS.find(e => e[0] === z);
+      if (!found) return;
+      const [, sym, name, col] = found;
+      const info = ELEMENT_MAP[z] || { cat: "other", title: `${name} (${sym}) — Matrix Element`, desc: "Analyzed via alternative geochemical decomposition & instrumental suite depending on mineral host." };
+      const st = CAT_STYLES[info.cat] || CAT_STYLES.other;
+
+      document.querySelectorAll(".el-tile").forEach(tile => {
+        tile.classList.toggle("is-active", Number(tile.getAttribute("data-z")) === z);
+      });
+
+      const badge = document.getElementById("insp-badge");
+      badge.style.background = st.badge || st.bar || "#64748B";
+      document.getElementById("insp-z").textContent = z;
+      document.getElementById("insp-sym").textContent = sym;
+      document.getElementById("insp-title").textContent = info.title;
+      document.getElementById("insp-desc").textContent = info.desc;
+
+      if (centerScroll) {
+        const wrap = document.getElementById("table-scroll-wrapper");
+        const targetX = (col - 1) * (wrap.scrollWidth / 18) - wrap.clientWidth / 2;
+        wrap.scrollTo({ left: Math.max(0, targetX), behavior: "smooth" });
+      }
+    }
+
+    document.querySelectorAll(".pill-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const filter = btn.getAttribute("data-filter");
+        document.querySelectorAll(".pill-btn").forEach(b => b.classList.toggle("is-active", b === btn));
+        document.querySelectorAll(".el-tile").forEach(tile => {
+          const cat = tile.getAttribute("data-cat");
+          tile.classList.toggle("is-dimmed", filter !== "all" && cat !== filter);
+        });
+      });
+    });
+
+    document.querySelectorAll(".chip-btn").forEach(btn => {
+      btn.addEventListener("click", () => selectElement(Number(btn.getAttribute("data-z")), true));
+    });
+
+    function withCleanExportState(fn) {
+      const dimmed = [...document.querySelectorAll(".el-tile.is-dimmed")];
+      const active = [...document.querySelectorAll(".el-tile.is-active")];
+      dimmed.forEach(el => el.classList.remove("is-dimmed"));
+      active.forEach(el => el.classList.remove("is-active"));
+      try {
+        fn();
+      } finally {
+        dimmed.forEach(el => el.classList.add("is-dimmed"));
+        active.forEach(el => el.classList.add("is-active"));
+      }
+    }
+
+    function triggerDownload(href, filename) {
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if (/LinkedInApp/i.test(navigator.userAgent)) {
+        alert("If the LinkedIn in-app browser blocks direct file downloads, tap the ••• menu and select 'Open in Browser' to save the 4K PNG or SVG.");
+      }
+    }
+
+    document.getElementById("btn-export-svg").addEventListener("click", () => {
+      withCleanExportState(() => {
+        const svgEl = document.getElementById("ptable-svg");
+        const src = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svgEl);
+        const blob = new Blob([src], { type: "image/svg+xml;charset=utf-8" });
+        triggerDownload(URL.createObjectURL(blob), `${EXPORT_BASENAME}.svg`);
+      });
+    });
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(" ");
+      let line = "";
+      let curY = y;
+      for (let i = 0; i < words.length; i++) {
+        const test = line + words[i] + " ";
+        if (ctx.measureText(test).width > maxWidth && i > 0) {
+          ctx.fillText(line.trim(), x, curY);
+          line = words[i] + " ";
+          curY += lineHeight;
+        } else {
+          line = test;
+        }
+      }
+      ctx.fillText(line.trim(), x, curY);
+      return curY + lineHeight;
+    }
+
+    document.getElementById("btn-export-png").addEventListener("click", () => {
+      let svgStr = "";
+      withCleanExportState(() => {
+        svgStr = new XMLSerializer().serializeToString(document.getElementById("ptable-svg"));
+      });
+
+      const W = 3840, H = 2160;
+      const canvas = document.createElement("canvas");
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "800 60px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif";
+      ctx.fillText(POSTER_TITLE, 100, 105);
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "500 32px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif";
+      ctx.fillText(POSTER_SUBTITLE, 100, 155);
+
+      const url = URL.createObjectURL(new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" }));
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 90, 185, 3660, 1470);
+        URL.revokeObjectURL(url);
+
+        ctx.fillStyle = FOOTER_BG;
+        ctx.fillRect(0, 1680, W, 480);
+
+        const cardW = 1170, cardH = 420, startX = 100, gapX = 65;
+        FOOTER_CANVAS_DATA.forEach((card, idx) => {
+          const cx = startX + idx * (cardW + gapX);
+          const cy = 1710;
+          ctx.fillStyle = CARD_BG;
+          ctx.fillRect(cx, cy, cardW, cardH);
+          ctx.fillStyle = card.accent;
+          ctx.fillRect(cx, cy, cardW, 10);
+
+          ctx.fillStyle = CARD_TITLE;
+          ctx.font = "800 30px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif";
+          ctx.fillText(card.title, cx + 28, cy + 54);
+
+          ctx.fillStyle = CARD_TEXT;
+          ctx.font = "500 23px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif";
+          let curY = cy + 98;
+          card.lines.forEach(line => {
+            curY = wrapCanvasText(ctx, "• " + line, cx + 28, curY, cardW - 56, 31) + 6;
+          });
+        });
+
+        canvas.toBlob(blob => {
+          triggerDownload(blob ? URL.createObjectURL(blob) : canvas.toDataURL("image/png"), `${EXPORT_BASENAME}_4K.png`);
+        }, "image/png");
+      };
+      img.src = url;
+    });
+  </script>
+</body>
+</html>
